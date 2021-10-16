@@ -2,6 +2,15 @@
 
 Write-Output ""
 
+function Fail-With {
+    param (
+        [string]$message
+    )
+
+    Write-Error($message)
+    exit
+}
+
 function Pre-Run-Init {
     if (Test-Path -Path $TempDir) {
         Write-Output("Removing everything in $($TempDir)`n")
@@ -18,13 +27,25 @@ function Get-Fsr-Release {
 }
 
 function Get-Steam-Lib-Vdf-Dir {
-    $SteamPath = (Get-ItemProperty -Path Registry::HKEY_CURRENT_USER\SOFTWARE\Valve\Steam -Name "SteamPath").SteamPath
+    $SteamPathProp = (Get-ItemProperty -Path Registry::HKEY_CURRENT_USER\SOFTWARE\Valve\Steam -Name "SteamPath")
+
+    if (-Not ($SteamPathProp)) {
+        Fail-With("Could not find Steam. Do you have it installed?")
+    }
+
+    $SteamPath = $SteamPathProp.SteamPath;
+    if (-Not $SteamPath -Or ($SteamPath.GetType().Name -ne "String") -Or [string]::IsNullOrWhiteSpace($SteamPath)) {
+        Fail-With("Could not find Steam. Do you have it installed?")
+    }
 
     "$($SteamPath)/steamapps/libraryfolders.vdf"
 }
 
 function Get-Vrc-Dir {
     $SteamLibVdfDir = Get-Steam-Lib-Vdf-Dir
+    if (-Not (Test-Path -Path $SteamLibVdfDir)) {
+        Fail-With "Could not find steam library folders manifest at $($SteamLibVdfDir). Do you have VRC installed?"
+    }
 
     $VrcAppId = '"438100"'
     $VdfContent = Get-Content -Path $SteamLibVdfDir
@@ -40,6 +61,10 @@ function Get-Vrc-Dir {
       } else {
         break
       }
+    }
+
+    if (-Not ($MatchingDirs.Count)) {
+        Fail-With "Could not find Steam libraries in $($SteamLibVdfDir)! Exiting..."
     }
 
     $VrcSteamLibDirQuoted = $MatchingDirs[$MatchingDirs.Count - 1].Line.Trim().Substring(6).Trim()
@@ -62,15 +87,25 @@ function Process-Asset {
 
     # Unzip.
     $UnzipDirectoryName = $Asset.name.Substring(0, $Asset.name.Length - 4)
-    Write-Output "Unzipping $($Asset.name) to $($UnzipDirectoryName)`n"
+    Write-Output "Unzipping $($Asset.name) to $($UnzipDirectoryName) in $($TempDir)`n"
 
     Expand-Archive `
         -Path "$($TempDir)\$($Asset.name)" `
         -DestinationPath "$($TempDir)\$($UnzipDirectoryName)"
 
+    $VrcDir = Get-Vrc-Dir
+    Write-Output("VRC directory: $($VrcDir)`n")
+    if (-Not (Test-Path -Path $VrcDir)) {
+        Fail-With "Could not find VRC under $($VrcDir). Do you have VRC installed?"
+    }
+    
+
     # Copy the OVR FSR files.
-    $VrcPluginsDir = "$(Get-Vrc-Dir)\VRChat_Data\Plugins\x86_64"
+    $VrcPluginsDir = "$($VrcDir)\VRChat_Data\Plugins\x86_64"
     Write-Output("VRC plugins directory: $($VrcPluginsDir)`n")
+    if (-Not (Test-Path -Path $VrcPluginsDir)) {
+        Fail-With "Directory $($VrcPluginsDir) does not exist! Exiting..."
+    }
 
     $OvrApiFileName = "openvr_api.dll"
     $OriginalOvrApiFileName = "openvr_api.orig.dll"
@@ -109,4 +144,4 @@ foreach ($Asset in $Response.assets) {
     }
 }
 
-Write-Output "Done"
+Write-Output "Success!"
