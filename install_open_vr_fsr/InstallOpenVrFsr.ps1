@@ -1,76 +1,12 @@
-﻿$TempDir = [System.Environment]::ExpandEnvironmentVariables("%LocalAppData%") + "\Temp\openvr_fsr_downloader"
+﻿. "$(Split-Path $PSScriptRoot -Parent)\common_ps1\mod_utils.ps1"
+
+$TempDir = "$(Get-Temp-Dir-Path)\openvr_fsr_downloader"
 
 Write-Output ""
-
-function Fail-With {
-    param (
-        [string]$message
-    )
-
-    Write-Error($message)
-    exit
-}
-
-function Pre-Run-Init {
-    if (Test-Path -Path $TempDir) {
-        Write-Output("Removing everything in $($TempDir)`n")
-        Remove-Item "$($TempDir)\*" -Recurse
-    } else {
-        Write-Output("Creating $($TempDir)`n")
-        New-Item -ItemType "directory" -Path $TempDir
-    }
-}
 
 function Get-Fsr-Release {
     Invoke-RestMethod `
         -Uri "https://api.github.com/repos/fholger/openvr_fsr/releases/latest"
-}
-
-function Get-Steam-Lib-Vdf-Dir {
-    $SteamPathProp = (Get-ItemProperty -Path Registry::HKEY_CURRENT_USER\SOFTWARE\Valve\Steam -Name "SteamPath")
-
-    if (-Not ($SteamPathProp)) {
-        Fail-With("Could not find Steam. Do you have it installed?")
-    }
-
-    $SteamPath = $SteamPathProp.SteamPath;
-    if (-Not $SteamPath -Or ($SteamPath.GetType().Name -ne "String") -Or [string]::IsNullOrWhiteSpace($SteamPath)) {
-        Fail-With("Could not find Steam. Do you have it installed?")
-    }
-
-    "$($SteamPath)/steamapps/libraryfolders.vdf"
-}
-
-function Get-Vrc-Dir {
-    $SteamLibVdfDir = Get-Steam-Lib-Vdf-Dir
-    if (-Not (Test-Path -Path $SteamLibVdfDir)) {
-        Fail-With "Could not find steam library folders manifest at $($SteamLibVdfDir). Do you have VRC installed?"
-    }
-
-    $VrcAppId = '"438100"'
-    $VdfContent = Get-Content -Path $SteamLibVdfDir
-
-    $SteamLibDirs = ($VdfContent | Select-String "path")
-    $VrcIdLineNumber = ($VdfContent | Select-String $VrcAppId).LineNumber
-
-    # TODO rewrite using Where-Object
-    $MatchingDirs = @()
-    foreach ($Dir in $SteamLibDirs) {
-      if ($Dir.LineNumber -lt $VrcIdLineNumber) {
-        $MatchingDirs += ,$Dir
-      } else {
-        break
-      }
-    }
-
-    if (-Not ($MatchingDirs.Count)) {
-        Fail-With "Could not find Steam libraries in $($SteamLibVdfDir)! Exiting..."
-    }
-
-    $VrcSteamLibDirQuoted = $MatchingDirs[$MatchingDirs.Count - 1].Line.Trim().Substring(6).Trim()
-    $VrcSteamLibDir = $VrcSteamLibDirQuoted.Substring(1, $VrcSteamLibDirQuoted.Length - 2).Replace("\\", "\")
-
-    "$($VrcSteamLibDir)\steamapps\common\VRChat"
 }
 
 function Process-Asset {
@@ -133,7 +69,7 @@ function Process-Asset {
     }
 }
 
-Pre-Run-Init
+Init-Temp-Dir($TempDir)
 
 $Response = Get-Fsr-Release
 

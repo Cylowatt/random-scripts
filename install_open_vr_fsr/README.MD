@@ -1,3 +1,6 @@
+# What Is This?
+This is a script that installs the latest version of the [FidelityFX mod for OpenVR](https://github.com/fholger/openvr_fsr) without you having to fiddle with replacing DLLs manually.
+
 # How to Get
 Download the files in this folder, or just download this whole repository as a zip. To download the whole repository:
 - Go [here](https://github.com/Cylowatt/random-scripts)
