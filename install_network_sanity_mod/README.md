@@ -1,5 +1,8 @@
 # What Is This?
-This is a script that installs the latest version of the [FidelityFX mod for OpenVR](https://github.com/fholger/openvr_fsr) for VRChat without you having to fiddle with replacing DLLs manually.
+This is a script that installs the latest version of the [Network Sanity mod](https://github.com/RequiDev/NetworkSanity) for VRChat without you having to fiddle with replacing DLLs manually.
+
+# Prerequisites
+Install [Melon Loader](https://melonwiki.xyz/#/) for your VRC.
 
 # How to Get
 Download the files in this folder, or just download this whole repository as a zip. To download the whole repository:
@@ -8,7 +11,7 @@ Download the files in this folder, or just download this whole repository as a z
 - Select "Download ZIP"
 
 # How to Use
-- Go to the the `install_open_vr_fsr` folder.
-- Right-click the `install_open_vr_fsr.bat` batch file, and select "Run as Administrator".
+- Go to the the `install_network_sanity` folder.
+- Right-click the `install_network_sanity.bat` batch file, and select "Run as Administrator".
 
 As long as you downloaded all of the files in this folder into the same folder, that should be it!
