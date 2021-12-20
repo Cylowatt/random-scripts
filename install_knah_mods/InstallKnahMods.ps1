@@ -1,8 +1,10 @@
 ﻿. "$(Split-Path $PSScriptRoot -Parent)\common_ps1\mod_utils.ps1"
 
+# More mods here: https://github.com/knah/VRCMods/releases
+# Add/remove comma-separated DLL names below.
 $DesiredMods = @(
     "IKTweaks.dll",
-    "MirrorResolutionUnlimiter.dll",
+    #"MirrorResolutionUnlimiter.dll",
     "TrueShaderAntiCrash.dll"
 )
 
