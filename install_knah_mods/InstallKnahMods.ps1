@@ -3,6 +3,7 @@
 # More mods here: https://github.com/knah/VRCMods/releases
 # Add/remove comma-separated DLL names below.
 $DesiredMods = @(
+    "UIExpansionKit.dll",
     "IKTweaks.dll",
     #"MirrorResolutionUnlimiter.dll",
     "TrueShaderAntiCrash.dll"
